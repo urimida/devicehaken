@@ -1,81 +1,38 @@
-const Engine = Matter.Engine;
-const Bodies = Matter.Bodies;
-const Composite = Matter.Composite;
-const Composites = Matter.Composites;
-const Mouse = Matter.Mouse;
-const MouseConstraint = Matter.MouseConstraint;
-
-let engine, canvas, mouse;
-let stack;
-let col = 40;
-let row = 10;
-let w = 10;
+let bgcolor;
+let activeBtn;
 
 function setup() {
-  canvas = createCanvas(windowWidth, windowHeight);
-  rectMode(CENTER);
-  engine = Engine.create();
-  mouse = Mouse.create(canvas.elt);
-  mouse.pixelRatio = pixelDensity();
-  mouseConstraint = MouseConstraint.create(engine, {
-    mouse: mouse,
-    constraint: {
-      stiffness: 1,
-    },
-  });
-  Composite.add(engine.world, mouseConstraint);
-  createWall(40);
-
-  stack = Composites.stack(width / 2, height / 2, col, row, 0, 0, (x, y) => {
-    return Bodies.rectangle(x, y, w, w);
-  });
-  Composites.mesh(stack, col, row, false, {
-    stiffness: 1,
-    damping: 0.01,
-  });
-
-  Composite.add(engine.world, stack);
+  createCanvas(windowWidth, windowHeight);
+  setShakeThreshold(30);
+  bgcolor = color(0, 255, 0);
+  activeBtn = createButton("Activate Sensors");
+  activeBtn.position(30, 40);
+  activeBtn.mousePressed(activateSensors);
 }
 
 function draw() {
-  Engine.update(engine);
-  background(255);
-  // walls
-  drawWall(20);
-
-  // noFill();
-  // stroke(0);
-  fill(50);
-  noStroke();
-  for (let b of stack.bodies) {
-    //rect(b.position.x, b.position.y, w);
-  }
-
-  // 선 그리기
-  stroke(0);
-  noFill();
-  let all = stack.constraints; //배열
-  for (let i = 0; i < all.length; i++) {
-    let c = all[i];
-    let bA = c.bodyA;
-    let bB = c.bodyB;
-    line(bA.position.x, bA.position.y, bB.position.x, bB.position.y);
-  }
+  background(bgcolor);
 }
 
-function createWall(t) {
-  Composite.add(engine.world, [
-    Bodies.rectangle(0, height / 2, t, height, { isStatic: true }),
-    Bodies.rectangle(width - t / 2, height / 2, t, height, { isStatic: true }),
-    Bodies.rectangle(width / 2, t / 2, width, t, { isStatic: true }),
-    Bodies.rectangle(width / 2, height - t / 2, width, t, { isStatic: true }),
-  ]);
+function deviceShaken() {
+  bgcolor = color(random(255), random(255), random(255));
 }
-function drawWall(t) {
-  fill(50);
-  noStroke();
-  rect(t / 2, height / 2, t, height);
-  rect(width - t / 2, height / 2, t, height);
-  rect(width / 2, t / 2, width, t);
-  rect(width / 2, height - t / 2, width, t);
+
+// 센서 활성화 함수 (사용자 상호작용 필요)
+function activateSensors() {
+  // p5.js가 제공하는 유틸리티 함수
+  // DeviceOrientationEvent : 모바일 기기의 방향 센서 접근
+  if (typeof DeviceMotionEvent.requestPermission === "function") {
+    DeviceMotionEvent.requestPermission()
+      .then((permissionState) => {
+        if (permissionState === "granted") {
+          console.log("센서 접근 허용됨");
+        } else {
+          console.log("센서 접근 거부됨");
+        }
+      })
+      .catch(console.error);
+  }
+  // 버튼을 숨기거나 제거하여 중복 클릭 방지
+  this.remove();
 }
